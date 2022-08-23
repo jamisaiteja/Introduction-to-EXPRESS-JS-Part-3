@@ -1,0 +1,184 @@
+1. SQLite Methods
+    The SQLite package provides multiple methods to execute SQL queries on a database.
+
+    Some of them are:
+
+    all()
+    get()
+    run()
+    exec(), etc.
+
+    1.1 get()
+        The get() method is used to get a single row from the table.
+
+    Syntax:
+
+            db.get(SQL_QUERY);
+
+    1.2 run()
+        The run() method is used to create or update table data.
+
+    Syntax:
+
+        db.run(SQL_QUERY);
+
+2. Node JS Third-party packages
+    2.1 Nodemon
+        The Nodemon is a tool that restarts the server automatically whenever we make changes in the file.
+
+    Installation Command: npm install -g nodemon
+
+    Note:
+        The-g indicates that the nodemon will be installed globally in the environment.
+        While executing the file, replace the node with the nodemon. For example, nodemon index.js.
+
+3. GoodReads APIs
+    Get Book
+    Add Book
+    Update Book
+    Delete Book
+    Get Author Books
+
+    3.1 Get Book
+        We can use /books/:bookId/ as a path to identify a single book resource, where bookId is a path parameter.
+
+        For example,
+
+        In http://localhost:3000/books/1/, the bookId is 1.
+
+    CODE: app.get("/books/:bookId/", async (request, response) => {
+            const { bookId } = request.params;
+            const getBookQuery = `
+                SELECT
+                *
+                FROM
+                book
+                WHERE
+                book_id = ${bookId};`;
+            const book = await db.get(getBookQuery);
+
+    Note:
+        Any string can be used as a path parameter.
+
+    3.2 Add Book
+        To add a book to the Database, you need to send a request body in JSON format.
+
+        The express.json() is used to recognize the incoming request object as JSON Object and parses it.
+
+        The request.body is used to get the HTTP Request body.
+
+        CODE: app.post("/books/", async (request, response) => {
+                const bookDetails = request.body;
+                const {
+                    title,
+                    authorId,
+                    rating,
+                    ratingCount,
+                    reviewCount,
+                    description,
+                    pages,
+                    dateOfPublication,
+                    editionLanguage,
+                    price,
+                    onlineStores,
+                } = bookDetails;
+                const addBookQuery = `
+                    INSERT INTO
+                    book (title,author_id,rating,rating_count,review_count,description,pages,date_of_publication,edition_language,price,online_stores)
+                    VALUES
+                    (
+                        '${title}',
+                        ${authorId},
+                        ${rating},
+                        ${ratingCount},
+                        ${reviewCount},
+                        '${description}',
+                        ${pages},
+                        '${dateOfPublication}',
+                        '${editionLanguage}',
+                        ${price},
+                        '${onlineStores}'
+                    );`;
+
+                const dbResponse = await db.run(addBookQuery);
+                const bookId = dbResponse.lastID;
+                response.send({ bookId: bookId });
+                });
+
+        The dbResponse.lastID provides the primary key of the new row inserted.
+
+    3.3 Update Book
+        We can use /books/:bookId/ as a path to identify a single book resource, where :bookId is the path parameter.
+
+        For example, http://localhost:3000/books/1/.
+
+        CODE:
+            app.put("/books/:bookId/", async (request, response) => {
+            const { bookId } = request.params;
+            const bookDetails = request.body;
+            const {
+                title,
+                authorId,
+                rating,
+                ratingCount,
+                reviewCount,
+                description,
+                pages,
+                dateOfPublication,
+                editionLanguage,
+                price,
+                onlineStores,
+            } = bookDetails;
+            const updateBookQuery = `
+                UPDATE
+                book
+                SET
+                title='${title}',
+                author_id=${authorId},
+                rating=${rating},
+                rating_count=${ratingCount},
+                review_count=${reviewCount},
+                description='${description}',
+                pages=${pages},
+                date_of_publication='${dateOfPublication}',
+                edition_language='${editionLanguage}',
+                price=${price},
+                online_stores='${onlineStores}'
+                WHERE
+                book_id = ${bookId};`;
+            await db.run(updateBookQuery);
+            response.send("Book Updated Successfully");
+            });
+
+        The request.params provides the parameters passed through the request.
+
+        Note: The strings sent through the APIs must be wrapped in quotes.
+    
+    3.4 Delete Book
+        CODE:
+            app.delete("/books/:bookId/", async (request, response) => {
+            const { bookId } = request.params;
+            const deleteBookQuery = `
+                DELETE FROM
+                book
+                WHERE
+                book_id = ${bookId};`;
+            await db.run(deleteBookQuery);
+            response.send("Book Deleted Successfully");
+            });
+
+    3.5 Get Author Books
+        CODE:
+            app.get("/authors/:authorId/books/", async (request, response) => {
+            const { authorId } = request.params;
+            const getAuthorBooksQuery = `
+                SELECT
+                *
+                FROM
+                book
+                WHERE
+                author_id = ${authorId};`;
+            const booksArray = await db.all(getAuthorBooksQuery);
+            response.send(booksArray);
+            });
+            
